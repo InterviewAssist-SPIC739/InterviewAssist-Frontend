@@ -61,7 +61,14 @@ fun AlumniEditProfileScreen(
     var firstName by remember { mutableStateOf(localName.getOrNull(0) ?: "") }
     var lastName by remember { mutableStateOf(if (localName.size > 1) localName.subList(1, localName.size).joinToString(" ") else "") }
     var email by remember { mutableStateOf(preferenceManager.getEmail()) }
-    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "+91 " }) }
+    val savedPhone = preferenceManager.getPhoneNumber()
+    var phoneNumber by remember { 
+        mutableStateOf(
+            if (savedPhone.isBlank()) "+91 " 
+            else if (savedPhone.startsWith("+91")) savedPhone 
+            else "+91 $savedPhone"
+        ) 
+    }
     
     var currentCompany by remember { mutableStateOf("") }
     var designation by remember { mutableStateOf("") }
@@ -108,7 +115,10 @@ fun AlumniEditProfileScreen(
                         lastName = it.lastName
                         email = it.email
                         it.profile?.let { p ->
-                            if (p.phoneNumber != null) phoneNumber = p.phoneNumber
+                            if (p.phoneNumber != null) {
+                                val pPhone = p.phoneNumber
+                                phoneNumber = if (pPhone.startsWith("+91")) pPhone else "+91 $pPhone"
+                            }
                             if (!p.currentCompany.isNullOrEmpty()) currentCompany = p.currentCompany
                             if (!p.designation.isNullOrEmpty()) designation = p.designation
                             if (!p.expectedGradYear.isNullOrEmpty()) graduationYear = p.expectedGradYear
@@ -137,7 +147,7 @@ fun AlumniEditProfileScreen(
     var expandedGrad by remember { mutableStateOf(false) }
     val gradYears = listOf("2020", "2021", "2022", "2023", "2024")
 
-    val phoneRegex = Regex("^\\+91 [6-9][0-9]{9}$")
+    val phoneRegex = Regex("^\\+91 ?[6-9][0-9]{9}$")
     val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     Scaffold(
@@ -361,7 +371,7 @@ fun AlumniEditProfileScreen(
                 Button(
                     onClick = {
                         if (!isPhoneValid) {
-                            Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with +91", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Please enter 10 digits after +91 starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         scope.launch {

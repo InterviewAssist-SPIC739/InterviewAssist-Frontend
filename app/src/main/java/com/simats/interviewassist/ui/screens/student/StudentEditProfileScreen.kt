@@ -60,7 +60,14 @@ fun StudentEditProfileScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("+91 ") }
+    val savedPhone = preferenceManager.getPhoneNumber()
+    var phoneNumber by remember { 
+        mutableStateOf(
+            if (savedPhone.isBlank()) "+91 " 
+            else if (savedPhone.startsWith("+91")) savedPhone 
+            else "+91 $savedPhone"
+        ) 
+    }
     var department by remember { mutableStateOf("") }
     var currentYear by remember { mutableStateOf("") }
     var graduationYear by remember { mutableStateOf("") }
@@ -100,7 +107,10 @@ fun StudentEditProfileScreen(
                         lastName = it.lastName
                         email = it.email
                         it.profile?.let { p ->
-                            phoneNumber = p.phoneNumber ?: "+91 "
+                            val pPhone = p.phoneNumber ?: ""
+                            phoneNumber = if (pPhone.isBlank()) "+91 " 
+                                        else if (pPhone.startsWith("+91")) pPhone 
+                                        else "+91 $pPhone"
                             department = p.major ?: ""
                             currentYear = p.currentYear ?: ""
                             graduationYear = p.expectedGradYear ?: ""
@@ -137,7 +147,7 @@ fun StudentEditProfileScreen(
     val years = listOf("1st Year", "2nd Year", "3rd Year", "Final Year")
     val gradYears = listOf("2024", "2025", "2026", "2027")
 
-    val phoneRegex = Regex("^\\+91 [6-9][0-9]{9}$")
+    val phoneRegex = Regex("^\\+91 ?[6-9][0-9]{9}$")
     val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     Scaffold(
@@ -352,7 +362,7 @@ fun StudentEditProfileScreen(
                 Button(
                     onClick = {
                         if (!isPhoneValid) {
-                            Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with +91", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Please enter 10 digits after +91 starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         scope.launch {
