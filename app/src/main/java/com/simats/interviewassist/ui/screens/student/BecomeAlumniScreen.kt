@@ -32,14 +32,14 @@ fun BecomeAlumniScreen(
     onBack: () -> Unit,
     onComplete: () -> Unit
 ) {
-    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "" }) }
+    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "+91 " }) }
     var currentCompany by remember { mutableStateOf("") }
     var designation by remember { mutableStateOf("") }
     var graduationYear by remember { mutableStateOf("") }
     var linkedInProfile by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
 
-    val phoneRegex = Regex("^[6-9][0-9]{9}$")
+    val phoneRegex = Regex("^\\+91 [6-9][0-9]{9}$")
     val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     var expandedYear by remember { mutableStateOf(false) }
@@ -361,7 +361,7 @@ fun BecomeAlumniScreen(
                             if (phoneNumber.isEmpty() || currentCompany.isEmpty() || designation.isEmpty()) {
                                 Toast.makeText(context, "Please fill in essential fields", Toast.LENGTH_SHORT).show()
                             } else if (!isPhoneValid) {
-                                Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with +91", Toast.LENGTH_SHORT).show()
                             } else {
                                 scope.launch {
                                     isSubmitting = true
