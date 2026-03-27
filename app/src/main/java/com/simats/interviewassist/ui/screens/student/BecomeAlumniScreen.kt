@@ -32,12 +32,15 @@ fun BecomeAlumniScreen(
     onBack: () -> Unit,
     onComplete: () -> Unit
 ) {
-    var phoneNumber by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "" }) }
     var currentCompany by remember { mutableStateOf("") }
     var designation by remember { mutableStateOf("") }
     var graduationYear by remember { mutableStateOf("") }
     var linkedInProfile by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
+
+    val phoneRegex = Regex("^[6-9][0-9]{9}$")
+    val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     var expandedYear by remember { mutableStateOf(false) }
     val years = (2020..2030).map { it.toString() }
@@ -357,12 +360,17 @@ fun BecomeAlumniScreen(
                         onClick = {
                             if (phoneNumber.isEmpty() || currentCompany.isEmpty() || designation.isEmpty()) {
                                 Toast.makeText(context, "Please fill in essential fields", Toast.LENGTH_SHORT).show()
+                            } else if (!isPhoneValid) {
+                                Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
                             } else {
                                 scope.launch {
                                     isSubmitting = true
                                     try {
                                         val request = com.simats.interviewassist.data.models.ProfileRequest(
                                             userId = preferenceManager.getUserId(),
+                                            firstName = preferenceManager.getUserName().split(" ").getOrNull(0),
+                                            lastName = preferenceManager.getUserName().split(" ").let { if (it.size > 1) it.drop(1).joinToString(" ") else "" },
+                                            email = preferenceManager.getEmail(),
                                             phoneNumber = phoneNumber,
                                             major = designation, // Using designation as major/field for alumni
                                             expectedGradYear = graduationYear,

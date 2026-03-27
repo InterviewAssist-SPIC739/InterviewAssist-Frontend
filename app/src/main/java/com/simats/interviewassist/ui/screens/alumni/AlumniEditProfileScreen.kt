@@ -61,7 +61,7 @@ fun AlumniEditProfileScreen(
     var firstName by remember { mutableStateOf(localName.getOrNull(0) ?: "") }
     var lastName by remember { mutableStateOf(if (localName.size > 1) localName.subList(1, localName.size).joinToString(" ") else "") }
     var email by remember { mutableStateOf(preferenceManager.getEmail()) }
-    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "+91 " }) }
+    var phoneNumber by remember { mutableStateOf(preferenceManager.getPhoneNumber().ifBlank { "" }) }
     
     var currentCompany by remember { mutableStateOf("") }
     var designation by remember { mutableStateOf("") }
@@ -136,6 +136,9 @@ fun AlumniEditProfileScreen(
 
     var expandedGrad by remember { mutableStateOf(false) }
     val gradYears = listOf("2020", "2021", "2022", "2023", "2024")
+
+    val phoneRegex = Regex("^[6-9][0-9]{9}$")
+    val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     Scaffold(
         topBar = {
@@ -264,7 +267,7 @@ fun AlumniEditProfileScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     EditProfileField("Last Name", lastName) { lastName = it }
                     Spacer(modifier = Modifier.height(20.dp))
-                    EditProfileField("Email", email, icon = Icons.Outlined.Email) { email = it }
+                    EditProfileField("Email", email, icon = Icons.Outlined.Email, readOnly = true) { /* email is now non-editable */ }
                     Spacer(modifier = Modifier.height(20.dp))
                     EditProfileField("Phone Number", phoneNumber) { phoneNumber = it }
                 }
@@ -357,11 +360,18 @@ fun AlumniEditProfileScreen(
                 }
                 Button(
                     onClick = {
+                        if (!isPhoneValid) {
+                            Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
                         scope.launch {
                             try {
                                 val userId = preferenceManager.getUserId()
                                 val request = com.simats.interviewassist.data.models.ProfileRequest(
                                     userId = userId,
+                                    firstName = firstName,
+                                    lastName = lastName,
+                                    email = email,
                                     phoneNumber = phoneNumber,
                                     major = null,
                                     expectedGradYear = graduationYear,

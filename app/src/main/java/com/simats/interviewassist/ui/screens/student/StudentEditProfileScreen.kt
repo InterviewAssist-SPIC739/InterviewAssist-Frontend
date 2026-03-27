@@ -60,7 +60,7 @@ fun StudentEditProfileScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("+91 ") }
+    var phoneNumber by remember { mutableStateOf("") }
     var department by remember { mutableStateOf("") }
     var currentYear by remember { mutableStateOf("") }
     var graduationYear by remember { mutableStateOf("") }
@@ -100,7 +100,7 @@ fun StudentEditProfileScreen(
                         lastName = it.lastName
                         email = it.email
                         it.profile?.let { p ->
-                            phoneNumber = p.phoneNumber ?: "+91 "
+                            phoneNumber = p.phoneNumber ?: ""
                             department = p.major ?: ""
                             currentYear = p.currentYear ?: ""
                             graduationYear = p.expectedGradYear ?: ""
@@ -136,6 +136,9 @@ fun StudentEditProfileScreen(
     var expandedGrad by remember { mutableStateOf(false) }
     val years = listOf("1st Year", "2nd Year", "3rd Year", "Final Year")
     val gradYears = listOf("2024", "2025", "2026", "2027")
+
+    val phoneRegex = Regex("^[6-9][0-9]{9}$")
+    val isPhoneValid = phoneRegex.matches(phoneNumber.trim())
 
     Scaffold(
         topBar = {
@@ -265,7 +268,7 @@ fun StudentEditProfileScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     EditProfileField("Last Name", lastName) { lastName = it }
                     Spacer(modifier = Modifier.height(20.dp))
-                    EditProfileField("Email", email, icon = Icons.Outlined.Email) { email = it }
+                    EditProfileField("Email", email, icon = Icons.Outlined.Email, readOnly = true) { /* email is now non-editable */ }
                     Spacer(modifier = Modifier.height(20.dp))
                     EditProfileField("Phone Number", phoneNumber) { phoneNumber = it }
                 }
@@ -348,11 +351,18 @@ fun StudentEditProfileScreen(
                 }
                 Button(
                     onClick = {
+                        if (!isPhoneValid) {
+                            Toast.makeText(context, "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
                         scope.launch {
                             try {
                                 val userId = preferenceManager.getUserId()
                                 val request = com.simats.interviewassist.data.models.ProfileRequest(
                                     userId = userId,
+                                    firstName = firstName,
+                                    lastName = lastName,
+                                    email = email,
                                     phoneNumber = phoneNumber,
                                     major = department,
                                     expectedGradYear = graduationYear,
@@ -405,6 +415,7 @@ fun EditProfileField(
     label: String, 
     value: String, 
     icon: ImageVector? = null,
+    readOnly: Boolean = false,
     onValueChange: (String) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -413,7 +424,8 @@ fun EditProfileField(
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = if (readOnly) ({}) else onValueChange,
+            readOnly = readOnly,
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),

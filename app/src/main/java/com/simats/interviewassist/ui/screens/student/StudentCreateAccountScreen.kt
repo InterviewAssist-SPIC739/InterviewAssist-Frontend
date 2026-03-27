@@ -450,6 +450,8 @@ fun SignupTextField(
     isPassword: Boolean = false,
     isError: Boolean = false
 ) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -457,9 +459,17 @@ fun SignupTextField(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         isError = isError,
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+        visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         trailingIcon = {
-            if (isError) {
+            if (isPassword) {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = if (passwordVisible) LocalAppColors.current.primary else LocalAppColors.current.iconTint
+                    )
+                }
+            } else if (isError) {
                 Icon(Icons.Default.Error, "Error", tint = LocalAppColors.current.error)
             }
         },

@@ -56,6 +56,9 @@ data class UserData(
 
 data class ProfileRequest(
     @SerializedName("user_id") val userId: Int,
+    @SerializedName("first_name") val firstName: String? = null,
+    @SerializedName("last_name") val lastName: String? = null,
+    val email: String? = null,
     @SerializedName("phone_number") val phoneNumber: String,
     val major: String? = null,
     @SerializedName("expected_grad_year") val expectedGradYear: String,
